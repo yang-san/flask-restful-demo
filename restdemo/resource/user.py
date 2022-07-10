@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from tools import min_length_str
+from restdemo.tools import min_length_str
 
 userList = []
 
