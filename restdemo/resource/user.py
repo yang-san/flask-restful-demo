@@ -1,6 +1,9 @@
 from flask_restful import Resource, reqparse
 from restdemo.tools import min_length_str
 
+from restdemo import db
+from restdemo.model import User as UserModel
+
 userList = []
 
 class User(Resource):
@@ -11,42 +14,58 @@ class User(Resource):
     )
 
     def get(self, username):
-        for user in userList:
-            if user['username'] == username:
-                return user
-        return f'message: {username} 不存在',404
+        user = db.session.query(UserModel).filter(
+            UserModel.username == username
+        ).first()
+        if user: 
+            return user.as_dict()
+        return f'message: 用戶 {username} 不存在',404
 
     def post(self, username):
-        data = User.parser.parse_args()
-        user = {
-            'username':username,
-            'password':data.get('password')
-        }
-        for u in userList:
-            if u['username'] == username:
-                return f'message: {username} 已存在',404
-        userList.append(user)
-        return f'message: {username} 已追加',201
-    
+        user = db.session.query(UserModel).filter(
+            UserModel.username == username
+        ).first()
+
+        if not user:
+            data = User.parser.parse_args()
+            u = UserModel(
+                username = username,
+                password_hash = data.get('password'),
+                email = data.get('email')
+            )
+            db.session.add(u)
+            db.session.commit()
+            return u.as_dict(), 201
+
+        return f'message: {username} 已存在',404
+
     def put(self, username):
         data = User.parser.parse_args()
-        for user in userList:
-            if user['username'] == username:
-                user['password'] = data.get('password')
-                return f'message: {username} 修改完成',200
+        user = db.session.query(UserModel).filter(
+            UserModel.username == username
+        ).first()
+        if user:
+            user.password_hash = data.get('password')
+            db.session.commit()
+            return f'message: {username} 修改完成',200
 
         return f'message: {username} not exists'
 
     def delete(self, username):
-        for idx in range(len(userList)):
-            if userList[idx]['username'] == username:
-                del userList[idx]
-                return f'message: {username} 移除成功', 201
+        user = db.session.query(UserModel).filter(
+            UserModel.username == username
+        ).first()
+        if user:
+            db.session.delete(user)
+            db.session.commit()
+            return f'message: {username} 移除成功', 201
 
         return f'message: 查無{username}, 移除失敗'
-            
+
 
 class UserList(Resource):
     def get(self):
-        return userList
+        users = db.session.query(UserModel).all()
+        return [u.as_dict() for u in users]
+        
 

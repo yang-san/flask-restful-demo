@@ -5,13 +5,10 @@ from flask_migrate import Migrate
 
 from restdemo.settings import DB_URL 
 
-from restdemo.resource.user import User, UserList
-from restdemo.resource.hello import Helloworld
-
 db = SQLAlchemy()
 
-from restdemo.model import User as UserModel
-from restdemo.model import Demo
+from restdemo.resource.user import User, UserList
+from restdemo.resource.hello import Helloworld
 
 def create_app():
     app = Flask(__name__)
