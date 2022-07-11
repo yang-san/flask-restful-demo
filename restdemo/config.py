@@ -21,3 +21,4 @@ class DB_settings:
 class Config:
     SQLALCHEMY_DATABASE_URI = DB_settings().get_db()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET = 'flask999'

@@ -3,6 +3,8 @@ from restdemo.tools import min_length_str
 
 from restdemo import db
 from restdemo.model import User as UserModel
+import jwt
+from flask import current_app, request
 
 userList = []
 
@@ -11,6 +13,11 @@ class User(Resource):
     parser.add_argument(
         'password', type=min_length_str(5), required=True,
         help= '{error_msg}'
+    )
+
+    parser.add_argument(
+        'email', type=str, required=True,
+        help= 'required email'
     )
 
     def get(self, username):
@@ -25,17 +32,18 @@ class User(Resource):
         user = db.session.query(UserModel).filter(
             UserModel.username == username
         ).first()
-
+        # 判斷DB內是否已存在user
         if not user:
             data = User.parser.parse_args()
-            u = UserModel(
+            user = UserModel(
                 username = username,
-                password_hash = data.get('password'),
                 email = data.get('email')
             )
-            db.session.add(u)
+            # Hash 轉換
+            user.password_hash = user.set_password(data['password'])
+            db.session.add(user)
             db.session.commit()
-            return u.as_dict(), 201
+            return user.as_dict(), 201
 
         return f'message: {username} 已存在',404
 
@@ -65,7 +73,19 @@ class User(Resource):
 
 class UserList(Resource):
     def get(self):
-        users = db.session.query(UserModel).all()
-        return [u.as_dict() for u in users]
-        
+        token = request.headers.get('Authorization')
+        try: 
+            jwt.decode(
+                token,
+                current_app.config.get('SECRET'),
+                algorithms=["HS256"] # 使用的演算法
+            )
+            
+            users = db.session.query(UserModel).all()
+            return [u.as_dict() for u in users]
 
+        except jwt.ExpiredSignatureError:
+            return 'Message: Expired token. Please login to get a new token !'
+    
+        except jwt.InvalidTokenError:
+            return 'Message: Invalid token. Please register or login !'
