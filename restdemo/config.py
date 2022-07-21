@@ -2,6 +2,8 @@
 配置文件
 '''
 from datetime import timedelta
+
+
 class DB_settings:
     def __init__(self):
         DB_TYPE = "mysql"
@@ -24,3 +26,5 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = 'flask999'
     JWT_EXPIRATION_DELTA = timedelta(seconds=300) #5分鐘延遲
+    JWT_AUTH_URL_RULE = '/auth/login'
+    JWT_AUTH_HEADER_PREFIX = 'JWT'

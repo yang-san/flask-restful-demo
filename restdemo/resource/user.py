@@ -1,10 +1,10 @@
 from flask_restful import Resource, reqparse
-from restdemo.tools import min_length_str
+from flask import current_app, request
+from flask_jwt import jwt_required
 
+from restdemo.tools import min_length_str
 from restdemo import db
 from restdemo.model import User as UserModel
-import jwt
-from flask import current_app, request
 
 userList = []
 
@@ -72,20 +72,7 @@ class User(Resource):
 
 
 class UserList(Resource):
+    @jwt_required()
     def get(self):
-        token = request.headers.get('Authorization')
-        try: 
-            jwt.decode(
-                token,
-                current_app.config.get('SECRET'),
-                algorithms=["HS256"] # 使用的演算法
-            )
-            
-            users = db.session.query(UserModel).all()
-            return [u.as_dict() for u in users]
-
-        except jwt.ExpiredSignatureError:
-            return 'Message: Expired token. Please login to get a new token !'
-    
-        except jwt.InvalidTokenError:
-            return 'Message: Invalid token. Please register or login !'
+        users = db.session.query(UserModel).all()
+        return [u.as_dict() for u in users]

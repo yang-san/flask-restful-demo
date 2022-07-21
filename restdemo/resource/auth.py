@@ -1,3 +1,6 @@
+
+# 使用JWT功能 , 此段login 機能已可不用
+'''
 from flask_restful import Resource, reqparse
 from restdemo.tools import min_length_str
 
@@ -33,3 +36,5 @@ class Login(Resource):
                 return f'login failed, please input the right username or password !  '
 
         return f'username not exists ! '
+
+'''

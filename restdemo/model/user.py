@@ -37,10 +37,28 @@ class User(db.Model):
             # 產生Token (使用Payload / 加密鑰匙)
             jwt_token = jwt.encode(
                 payload,
-                current_app.config.get('SECRET'), #加密鑰匙
+                current_app.config.get('SECRET_KEY'), #加密鑰匙
                 algorithm="HS256" # 使用的演算法
             )
-            return jwt_token
+            return jwt_token.decode()
 
         except Exception as ex:
             return str(ex)
+
+    @staticmethod
+    def authenticate(username, password):
+        # 驗證用戶名
+        user = db.session.query(User).filter(
+            User.username == username
+        ).first()
+        if user:
+            if user.check_password(password):
+                return user
+
+    @staticmethod
+    def identity(payload):
+        user_id = payload['identity']
+        user = db.session.query(User).filter(
+            User.id == user_id
+        )
+        return user
